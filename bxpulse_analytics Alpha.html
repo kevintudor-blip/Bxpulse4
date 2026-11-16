@@ -1919,6 +1919,63 @@
         window.BxPulseCascadeSystemState();
         renderAcademicCharts();
     });
-    </script>
+    </scridocument.addEventListener('DOMContentLoaded', () => {
+    // 1. Target your Master Focus dropdown (Update the ID if yours is different)
+    const studentDropdown = document.querySelector('select'); // or document.getElementById('student-selector')
+
+    if (studentDropdown) {
+        // Listen for when you select a different student
+        studentDropdown.addEventListener('change', (event) => {
+            const selectedStudentId = event.target.value;
+            updateGraphsForIndividualStudent(selectedStudentId);
+        });
+    }
+
+    // 2. Function to filter data and update the Chart.js graphs
+    function updateGraphsForIndividualStudent(studentId) {
+        console.log(`📊 Updating graphs for student ID: ${studentId}`);
+
+        // Fetch the master database
+        const dbRaw = localStorage.getItem('bxpulse_master_student_db_v14');
+        if (!dbRaw) return;
+        
+        const db = JSON.parse(dbRaw);
+        
+        // Find the specific student
+        const student = db.find(s => s.id === studentId || s.name === studentId);
+        
+        if (!student) {
+            console.warn("Student not found in database.");
+            return;
+        }
+
+        // Extract this individual student's clinical data
+        const probes = student.academicProbes || [];
+        const behaviors = student.behaviorLogs || [];
+
+        // 3. Update your Chart.js instances
+        // Note: Replace 'window.academicChart' with whatever variable names you used to initialize your charts
+        
+        if (window.academicChart) {
+            // Update Academic Mastery Trendline
+            window.academicChart.data.labels = probes.map(p => p.date || p.timestamp);
+            window.academicChart.data.datasets[0].data = probes.map(p => p.accuracy);
+            window.academicChart.update();
+        }
+
+        if (window.behaviorChart) {
+            // Update Behavior / Fluency Charts
+            window.behaviorChart.data.labels = behaviors.map(b => b.date || b.timestamp);
+            window.behaviorChart.data.datasets[0].data = behaviors.map(b => b.frequency || b.duration);
+            window.behaviorChart.update();
+        }
+
+        // Update the UI text badges on the dashboard
+        const activeFocusName = document.querySelector('h3.active-student-name');
+        if (activeFocusName) {
+            activeFocusName.innerText = student.name;
+        }
+    }
+});>
 </body>
 </html>
